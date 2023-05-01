@@ -44,6 +44,7 @@ android {
 repositories {
     google()
     mavenCentral()
+    jcenter()
 }
 
 
@@ -54,4 +55,6 @@ dependencies {
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
+    //nfc adapter
+    implementation 'com.github.pro100svitlo:creditCardNfcReader:1.0.3'
 }
