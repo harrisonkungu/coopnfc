@@ -19,7 +19,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 
-public class CoopNFC extends Plugin  implements CardNfcAsyncTask.CardNfcInterface{
+public abstract class CoopNFC extends Plugin {
 
     private CardNfcAsyncTask mCardNfcAsyncTask;
 //  private NfcAdapter mNfcAdapter;
@@ -43,13 +43,7 @@ public class CoopNFC extends Plugin  implements CardNfcAsyncTask.CardNfcInterfac
     private static final String TAG = "NFC card plugin";
 
 
-//  @Override
-//     protected void onNewIntent(Intent intent) {
-//         // super.onNewIntent(intent);
-//         if (mNfcAdapter != null && mNfcAdapter.isEnabled()) {
-//             mCardNfcAsyncTask = new CardNfcAsyncTask.Builder(this, intent, mIntentFromCreate).build();
-//         }
-//     }
+
 
     @Override
     public void load() {
@@ -57,24 +51,8 @@ public class CoopNFC extends Plugin  implements CardNfcAsyncTask.CardNfcInterfac
         activity = getActivity();
     }
 
-    @Override
-    public void onPause(boolean multitasking) {
 
-    }
 
-    @Override
-    public void onResume(boolean multitasking) {
-
-    }
-
-//    @Override
-//    protected void onNewIntent(Intent intent) {
-//        super.onNewIntent(intent);
-//        if (mNfcAdapter != null && mNfcAdapter.isEnabled()) {
-//            mCardNfcAsyncTask = new CardNfcAsyncTask.Builder(this, intent, mIntentFromCreate)
-//                    .build();
-//        }
-//    }
 
     public String echo(String value) {
         Log.i("Echo", value);
@@ -128,7 +106,7 @@ public class CoopNFC extends Plugin  implements CardNfcAsyncTask.CardNfcInterfac
 //                String prettycard = getPrettyCardNumber(card);
 //                return prettycard;
 
-                  mCardNfcAsyncTask = new CardNfcAsyncTask.Builder(this, intt, mIntentFromCreate).build();
+                  mCardNfcAsyncTask = new CardNfcAsyncTask.Builder((CardNfcAsyncTask.CardNfcInterface) this, intt, mIntentFromCreate).build();
                 Log.d("-------->>>", String.valueOf(mCardNfcAsyncTask.getCardNumber()));
                 message = "Card Number " +String.valueOf(mCardNfcAsyncTask.getCardNumber());
 
@@ -192,34 +170,6 @@ public class CoopNFC extends Plugin  implements CardNfcAsyncTask.CardNfcInterfac
         // mProgressDialog.show();
     }
 
-//   private void showTurnOnNfcDialog(){
-//         if (mTurnNfcDialog == null) {
-//             String title = "Device NFC";
-//             String mess = "Enable NFC?";
-//             String pos = "Yes, Sure";
-//             String neg = "Noo!";
-//             mTurnNfcDialog = new AlertDialog.Builder(this)
-//                     .setTitle(title)
-//                     .setMessage(mess)
-//                     .setPositiveButton(pos, new DialogInterface.OnClickListener() {
-//                         @Override
-//                         public void onClick(DialogInterface dialogInterface, int i) {
-//                             // Send the user to the settings page and hope they turn it on
-//                             if (android.os.Build.VERSION.SDK_INT >= 16) {
-//                                 startActivity(new Intent(android.provider.Settings.ACTION_NFC_SETTINGS));
-//                             } else {
-//                                 startActivity(new Intent(android.provider.Settings.ACTION_WIRELESS_SETTINGS));
-//                             }
-//                         }
-//                     })
-//                     .setNegativeButton(neg, new DialogInterface.OnClickListener() {
-//                         @Override
-//                         public void onClick(DialogInterface dialogInterface, int i) {
-//                             // onBackPressed();
-//                         }
-//                     }).create();
-//         }
-//         mTurnNfcDialog.show();
-//     }
-
  }
+
+

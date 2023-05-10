@@ -42,7 +42,7 @@ import java.io.IOException;
 
 public class CoopNFCPlugin extends Plugin implements CardNfcAsyncTask.CardNfcInterface{
 
-    private CoopNFC implementation;
+//    private CoopNFC implementation;
     private Context context;
     private Intent intent;
     private AppCompatActivity activity;
@@ -59,14 +59,17 @@ public class CoopNFCPlugin extends Plugin implements CardNfcAsyncTask.CardNfcInt
     private PluginCall caller;
     private PendingIntent pendingIntent;
 
+    private boolean mIsScanNow;
+
     @Override
     public void load() {
-        implementation = new CoopNFC();
+//        implementation = new CoopNFC();
         context = getContext();
         intent = new Intent(getContext(), getClass());
         activity = getActivity();
         nfcAdapter = NfcAdapter.getDefaultAdapter(context);
         pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        mCardNfcUtils = new CardNfcUtils(activity);
     }
 
 
@@ -98,7 +101,7 @@ public class CoopNFCPlugin extends Plugin implements CardNfcAsyncTask.CardNfcInt
 
 
     @Override
-    public void onPause(boolean multitasking) {
+    public void handleOnPause() {
         Log.d("NFC", "App is in background");
         NfcAdapter nfcAdapter = NfcAdapter.getDefaultAdapter(context);
         if (nfcAdapter != null) {
@@ -107,29 +110,14 @@ public class CoopNFCPlugin extends Plugin implements CardNfcAsyncTask.CardNfcInt
     }
 
     @Override
-    public void onResume(boolean multitasking) {
-        Log.d("NFC", "App is in foreground");
-        NfcAdapter nfcAdapter = NfcAdapter.getDefaultAdapter(context);
+    public void handleOnResume() {
+        mIntentFromCreate = false;
+        if (nfcAdapter != null && !nfcAdapter.isEnabled()){
+        } else if (nfcAdapter != null){
+            if (!mIsScanNow){
 
-//        String[][] techListsArray = new String[][] {
-//                new String[] { NfcA.class.getName() },
-//                new String[] { NfcB.class.getName() },
-//                new String[] { NfcF.class.getName() },
-//                new String[] { NfcV.class.getName() },
-//                new String[] { IsoDep.class.getName() },
-//                new String[] { MifareClassic.class.getName() },
-//                new String[] { MifareUltralight.class.getName() }
-//        };
-//
-        String[][] techListsArray = new String[][] {
-                new String[] { IsoDep.class.getName() }
-        };
-
-        if (nfcAdapter != null) {
-            IntentFilter[] filters = new IntentFilter[] {
-                    new IntentFilter(NfcAdapter.ACTION_NDEF_DISCOVERED)
-            };
-            nfcAdapter.enableForegroundDispatch(activity, pendingIntent, filters, techListsArray);
+            }
+            mCardNfcUtils.enableDispatch();
         }
     }
 
@@ -147,11 +135,11 @@ public class CoopNFCPlugin extends Plugin implements CardNfcAsyncTask.CardNfcInt
 
     @PluginMethod
     public void waitNFC(PluginCall call) {
-        String res = implementation.CallNfc(context , activity, intent);
-         //String res = implementation.getNfcStatus(context);
-        JSObject ret = new JSObject();
-        ret.put("result", res);
-        call.resolve(ret);
+//        String res = implementation.CallNfc(context , activity, intent);
+//         //String res = implementation.getNfcStatus(context);
+//        JSObject ret = new JSObject();
+//        ret.put("result", res);
+//        call.resolve(ret);
     }
 
     @PluginMethod
@@ -193,31 +181,28 @@ public class CoopNFCPlugin extends Plugin implements CardNfcAsyncTask.CardNfcInt
     }
 
     private void scan() {
-
-        Log.d("test------<>>","message2222");
-        nfcAdapter = NfcAdapter.getDefaultAdapter(context);
-        if (nfcAdapter == null){
-            message = "NFC Not Supported by device";
-        }else if(!nfcAdapter.isEnabled()){
-            message = "Please Enable NFC";
-        } else {
-            Log.d("test------<>>","message22277777");
-            mCardNfcAsyncTask = new CardNfcAsyncTask.Builder(this, intent, mIntentFromCreate).build();
-            mCardNfcUtils = new CardNfcUtils(activity);
-            getActivity()
-                    .runOnUiThread(
-                            () ->{
-                                Log.d("test------<>>","message2222999999");
-                    if (cardReady ==true ){
-                        Log.d("test------<>>","message34343434343434");
-                        PluginCall call = getSavedCall();
-                        String card = mCardNfcAsyncTask.getCardNumber();
-                        Log.d("NFC Status", "Ready to read "+card);
-                    }
-
-        });
-
+        try{
+            nfcAdapter = NfcAdapter.getDefaultAdapter(context);
+            if (nfcAdapter == null){
+                nfcNotAvailable();
+            }else if(!nfcAdapter.isEnabled()){
+                nfcDisabled();
+            } else {
+                mCardNfcAsyncTask = new CardNfcAsyncTask.Builder(this, intent, mIntentFromCreate).build();
+                mCardNfcUtils = new CardNfcUtils(activity);
+                getActivity()
+                        .runOnUiThread(
+                                () ->{
+                                    if (cardReady ==true ){
+                                        PluginCall call = getSavedCall();
+                                        String card = mCardNfcAsyncTask.getCardNumber();
+                                    }
+                                });
+            }
+        }catch(Exception ex){
+            Log.e("EXCEPTION", "An exception occurred during reading NFC");
         }
+
     }
 
 
@@ -231,37 +216,34 @@ public class CoopNFCPlugin extends Plugin implements CardNfcAsyncTask.CardNfcInt
 
     @Override
     public void startNfcReadCard() {
-
+        Log.d("start reading 1", "ready to start reading nfc here");
     }
 
     @Override
     public void cardIsReadyToRead() {
-        cardReady = true;
-        Log.d("cardIsReadyToRead","message2222999999=====>>");
-        JSObject jsObject = new JSObject();
-        jsObject.put("hasContent", true);
-        jsObject.put("content", mCardNfcAsyncTask.getCardNumber());
-        jsObject.put("cardType", mCardNfcAsyncTask.getCardType());
-        jsObject.put("cardNumber", mCardNfcAsyncTask.getCardNumber());
-        jsObject.put("expiryDate", mCardNfcAsyncTask.getCardExpireDate());
-        PluginCall call = getSavedCall();
-
-        if (call != null) {
-            Log.i("cardIsReadyToRead","message2222999999=====>>   "+mCardNfcAsyncTask.getCardNumber());
-            if (call.isKeptAlive()) {
+        try{
+            cardReady = true;
+            JSObject jsObject = new JSObject();
+            jsObject.put("hasContent", true);
+            jsObject.put("content", mCardNfcAsyncTask.getCardNumber());
+            jsObject.put("cardType", mCardNfcAsyncTask.getCardType());
+            jsObject.put("cardNumber", mCardNfcAsyncTask.getCardNumber());
+            jsObject.put("expiryDate", mCardNfcAsyncTask.getCardExpireDate());
+            PluginCall call = getSavedCall();
+            if (call != null) {
+                if (call.isKeptAlive()) {
                     call.resolve(jsObject);
+                } else {
+                    call.resolve(jsObject);
+                    mCardNfcAsyncTask = null;
+                }
             } else {
-                call.resolve(jsObject);
-                //destroy nfc here
+
             }
-        } else {
-            //destroy nfc here
+        }catch( Exception ex){
+            Log.e("EXCEPTION","An exception occured during reading" +ex);
         }
 
-//        String card = mCardNfcAsyncTask.getCardNumber();
-//        String expiredDate = mCardNfcAsyncTask.getCardExpireDate();
-//        String cardType = mCardNfcAsyncTask.getCardType();
-//        Log.d("---------->>>came here", "I executed this far" +card);
     }
 
     @Override
@@ -281,9 +263,38 @@ public class CoopNFCPlugin extends Plugin implements CardNfcAsyncTask.CardNfcInt
 
     @Override
     public void finishNfcReadCard() {
+        Log.d("Finished --", "I am done with reading");
+
+        if (nfcAdapter != null) {
+            nfcAdapter.disableReaderMode(activity);
+            nfcAdapter = null;
+        }
         mCardNfcAsyncTask = null;
     }
 
+    private void nfcDisabled(){
+        finishNfcReadCard();
+        JSObject jsObject = new JSObject();
+        jsObject.put("hasContent", true);
+        jsObject.put("content", "NFC Disabled");
+        jsObject.put("cardType", "CARD_ERR");
+        jsObject.put("cardNumber", "CARD_ERR");
+        jsObject.put("expiryDate", "CARD_ERR");
+        PluginCall call = getSavedCall();
+        call.resolve(jsObject);
+    }
+
+    private void nfcNotAvailable(){
+        finishNfcReadCard();
+        JSObject jsObject = new JSObject();
+        jsObject.put("hasContent", true);
+        jsObject.put("content", "NFC Not Available");
+        jsObject.put("cardType", "CARD_ERR");
+        jsObject.put("cardNumber", "CARD_ERR");
+        jsObject.put("expiryDate", "CARD_ERR");
+        PluginCall call = getSavedCall();
+        call.resolve(jsObject);
+    }
 
 
 }
