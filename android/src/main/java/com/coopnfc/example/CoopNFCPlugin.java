@@ -68,6 +68,7 @@ public class CoopNFCPlugin extends Plugin implements CardNfcAsyncTask.CardNfcInt
         intent = new Intent(getContext(), getClass());
         activity = getActivity();
         nfcAdapter = NfcAdapter.getDefaultAdapter(context);
+        //pendingIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
         pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         mCardNfcUtils = new CardNfcUtils(activity);
     }
